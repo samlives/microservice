@@ -12,13 +12,22 @@ services:
     container_name: cartdb
     restart: always   
     ports:
-        - "6379:6379"    
+        - "6379:6379"         
+  rabbitmq:
+    container_name: rabbitmq 
+    hostname: my-rabbit
+    restart: always   
+    ports:
+        - 5672:5672
+        - 15672:15672
+
   catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "CatalogDatabaseSettings:ConnectionString=mongodb://catalogdb:27017"
+      - "CatalogDatabaseSettings:ConnectionString=mongodb://catalogdb:27017"     
     depends_on:
       - catalogdb
+      - rabbitmq
     volumes:
       - ${HOME}/.microsoft/usersecrets/:/root/.microsoft/usersecrets
       - ${HOME}/.aspnet/https:/root/.aspnet/https/
@@ -29,6 +38,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "ConnectionStrings:Redis=cartdb:6379"
+      - "EventBus:HostName=rabbitmq"
+      - "EventBus:UserName=guest"
+      - "EventBus:Password=guest"
     depends_on:
       - cartdb
     volumes:

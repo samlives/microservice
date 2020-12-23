@@ -1,0 +1,109 @@
+services:
+  cart.api:
+    build:
+      context: C:\Users\samarendra\source\repos\Microservice_eCom
+      dockerfile: src/Cart/Cart.API/Dockerfile
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: Cart.API
+      target: base
+    container_name: Cart.API
+    depends_on:
+      cartdb:
+        condition: service_started
+    entrypoint: tail -f /dev/null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      ConnectionStrings:Redis: cartdb:6379
+      DOTNET_USE_POLLING_FILE_WATCHER: '1'
+      EventBus:HostName: rabbitmq
+      EventBus:Password: guest
+      EventBus:UserName: guest
+      NUGET_FALLBACK_PACKAGES: ''
+    image: cartapi:dev
+    labels:
+      com.microsoft.visualstudio.debuggee.arguments: ' --additionalProbingPath /root/.nuget/packages  ""'
+      com.microsoft.visualstudio.debuggee.killprogram: /bin/sh -c "if PID=$$(pidof
+        dotnet); then kill $$PID; fi"
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+    ports:
+    - published: 8001
+      target: 80
+    tty: true
+    volumes:
+    - C:\Users\samarendra\source\repos\Microservice_eCom\src\Cart\Cart.API:/app:rw
+    - C:\Users\samarendra\vsdbg\vs2017u5:/remote_debugger:rw
+    - C:\Users\samarendra\AppData\Roaming\ASP.NET\Https:/root/.aspnet/https:ro
+    - /.aspnet/https:/root/.aspnet/https/:rw
+    - C:\Users\samarendra\AppData\Roaming\Microsoft\UserSecrets:/root/.microsoft/usersecrets:ro
+    - C:\Users\samarendra\.nuget\packages:/root/.nuget/packages:ro
+    - C:\Users\samarendra\source\repos\Microservice_eCom:/src:rw
+  cartdb:
+    container_name: cartdb
+    image: redis
+    ports:
+    - published: 6379
+      target: 6379
+    restart: always
+  catalog.api:
+    build:
+      context: C:\Users\samarendra\source\repos\Microservice_eCom
+      dockerfile: src/Catalog/Catalog.Api/Dockerfile
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: Catalog.Api
+      target: base
+    container_name: Catalog.Api
+    depends_on:
+      catalogdb:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    entrypoint: tail -f /dev/null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      CatalogDatabaseSettings:ConnectionString: mongodb://catalogdb:27017
+      DOTNET_USE_POLLING_FILE_WATCHER: '1'
+      NUGET_FALLBACK_PACKAGES: ''
+    image: catalogapi:dev
+    labels:
+      com.microsoft.visualstudio.debuggee.arguments: ' --additionalProbingPath /root/.nuget/packages  ""'
+      com.microsoft.visualstudio.debuggee.killprogram: /bin/sh -c "if PID=$$(pidof
+        dotnet); then kill $$PID; fi"
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+    ports:
+    - published: 8000
+      target: 80
+    tty: true
+    volumes:
+    - C:\Users\samarendra\source\repos\Microservice_eCom\src\Catalog\Catalog.Api:/app:rw
+    - C:\Users\samarendra\vsdbg\vs2017u5:/remote_debugger:rw
+    - C:\Users\samarendra\AppData\Roaming\ASP.NET\Https:/root/.aspnet/https:ro
+    - /.aspnet/https:/root/.aspnet/https/:rw
+    - C:\Users\samarendra\AppData\Roaming\Microsoft\UserSecrets:/root/.microsoft/usersecrets:ro
+    - C:\Users\samarendra\.nuget\packages:/root/.nuget/packages:ro
+    - C:\Users\samarendra\source\repos\Microservice_eCom:/src:rw
+  catalogdb:
+    container_name: catalogdb
+    image: mongo
+    ports:
+    - published: 27017
+      target: 27017
+    restart: always
+    volumes:
+    - /site/data/db
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: my-rabbit
+    image: rabbitmq:3-management
+    ports:
+    - published: 5672
+      target: 5672
+    - published: 15672
+      target: 15672
+    restart: always
+version: '3.4'

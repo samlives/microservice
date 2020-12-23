@@ -1,0 +1,67 @@
+services:
+  cart.api:
+    build:
+      context: C:\Users\samarendra\source\repos\Microservice_eCom
+      dockerfile: src/Cart/Cart.API/Dockerfile
+    depends_on:
+      cartdb:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings:Redis: cartdb:6379
+      EventBus:HostName: rabbitmq
+      EventBus:Password: guest
+      EventBus:UserName: guest
+    image: cartapi
+    ports:
+    - published: 8001
+      target: 80
+    volumes:
+    - /.aspnet/https:/root/.aspnet/https/:rw
+    - /.microsoft/usersecrets:/root/.microsoft/usersecrets:rw
+  cartdb:
+    container_name: cartdb
+    image: redis
+    ports:
+    - published: 6379
+      target: 6379
+    restart: always
+  catalog.api:
+    build:
+      context: C:\Users\samarendra\source\repos\Microservice_eCom
+      dockerfile: src/Catalog/Catalog.Api/Dockerfile
+    depends_on:
+      catalogdb:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      CatalogDatabaseSettings:ConnectionString: mongodb://catalogdb:27017
+    image: catalogapi
+    ports:
+    - published: 8000
+      target: 80
+    volumes:
+    - /.aspnet/https:/root/.aspnet/https/:rw
+    - /.microsoft/usersecrets:/root/.microsoft/usersecrets:rw
+  catalogdb:
+    container_name: catalogdb
+    image: mongo
+    ports:
+    - published: 27017
+      target: 27017
+    restart: always
+    volumes:
+    - /site/data/db
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: my-rabbit
+    image: rabbitmq:3-management
+    ports:
+    - published: 5672
+      target: 5672
+    - published: 15672
+      target: 15672
+    restart: always
+version: '3.4'

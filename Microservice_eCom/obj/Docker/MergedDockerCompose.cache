@@ -9,6 +9,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings:Redis: cartdb:6379
+      EventBus:HostName: //rabbitmq:5276
+      EventBus:Password: guest
+      EventBus:UserName: guest
     image: cartapi
     ports:
     - published: 8001
@@ -30,6 +33,8 @@ services:
     depends_on:
       catalogdb:
         condition: service_started
+      rabbitmq:
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       CatalogDatabaseSettings:ConnectionString: mongodb://catalogdb:27017
@@ -49,4 +54,14 @@ services:
     restart: always
     volumes:
     - /site/data/db
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: my-rabbit
+    image: rabbitmq:3-management
+    ports:
+    - published: 5672
+      target: 5672
+    - published: 8083
+      target: 15672
+    restart: always
 version: '3.4'

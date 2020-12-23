@@ -17,12 +17,23 @@ namespace EventBusRabbitMQ
         public RabbitMQConnection(IConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
-            if (IsConnected)
+            if (!IsConnected)
             {
                 TyrConnect();
             }
         }
 
+        public IConnection Connection
+        {
+            get
+            {
+                if (!IsConnected)
+                {
+                    TyrConnect();
+                }
+                return _connection;
+            }
+        }
         public bool IsConnected
         {
             get
@@ -37,7 +48,7 @@ namespace EventBusRabbitMQ
             {
                 throw new InvalidOperationException("Rabbit MQ not connected");
             }
-            return _connection.CreateModel();
+            return Connection.CreateModel();
         }
 
 
@@ -47,6 +58,7 @@ namespace EventBusRabbitMQ
             try
             {
                 _connection = _connectionFactory.CreateConnection();
+
             }
             catch (BrokerUnreachableException)
             {
@@ -69,10 +81,11 @@ namespace EventBusRabbitMQ
             try
             {
                 _connection.Dispose();
+                _disposed = true;
             }
             catch (Exception)
             {
-
+                _disposed = false;
                 throw;
             }
         }
